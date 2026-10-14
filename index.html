@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Meals</title>
+<style>
+  :root { --bg:#faf7f2; --card:#fff; --ink:#2b2b2b; --muted:#7a746b; --accent:#3f7d58; --line:#ece6dc; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#161815; --card:#20231f; --ink:#ecebe6; --muted:#9a9a90; --accent:#7fc59a; --line:#2e332c; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.4 -apple-system,system-ui,sans-serif; padding-bottom:40px; }
+  header { padding:20px 16px 8px; }
+  h1 { margin:0; font-size:22px; }
+  .sub { color:var(--muted); font-size:14px; margin-top:2px; }
+  nav { display:flex; gap:6px; padding:8px 16px; overflow-x:auto; position:sticky; top:0; background:var(--bg); z-index:1; }
+  nav button { flex:1; min-width:46px; padding:10px 0; border:1px solid var(--line); border-radius:12px; background:var(--card); color:var(--ink); font-size:14px; }
+  nav button.on { background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600; }
+  main { padding:8px 16px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px; margin-bottom:12px; }
+  .card.done { opacity:.55; }
+  .head { display:flex; justify-content:space-between; align-items:baseline; }
+  .slot { font-weight:700; font-size:13px; letter-spacing:.05em; text-transform:uppercase; color:var(--accent); }
+  .time { color:var(--muted); font-size:13px; }
+  ul { list-style:none; margin:8px 0; padding:0; }
+  li { padding:3px 0; }
+  li span { color:var(--muted); }
+  .row { display:flex; gap:8px; margin-top:8px; }
+  .row button { flex:1; padding:10px; border-radius:10px; border:1px solid var(--line); background:transparent; color:var(--ink); font-size:15px; }
+  .row .tick.on { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .note { color:var(--muted); font-size:13px; text-align:center; margin-top:16px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>My Meals</h1>
+  <div class="sub">1400 kcal plan · no shellfish · sip 2.5–3 L water</div>
+</header>
+<nav id="days"></nav>
+<main id="meals"></main>
+<p class="note">Don't like a meal? Tap Swap. Everything comes from your diet plan PDF.</p>
+
+<script>
+const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+
+// Each slot: options come straight from the PDF. off = rotation offset so pairings vary.
+const SLOTS = [
+  { name:"Early morning", time:"9:00", off:0, options:[
+    ["Warm water · 1 glass","Almonds (soaked) · 5","Walnuts · 2"] ]},
+  { name:"Breakfast", time:"10:00", off:0, options:[
+    ["Apple · 1","Low fat milk (2%) · 1 glass"],
+    ["Overnight oats with chia seeds · 1 bowl"],
+    ["Idli · 2","Green chutney · 1 spoon","Sambhar · 1 bowl"],
+    ["Oats upma · 1 bowl","Moong sprouts · 1 serving"],
+    ["Muesli (no sugar) with milk · 1 bowl"],
+    ["Moong dal chilla · 2","Curd · 1 bowl"] ]},
+  { name:"Morning snack", time:"12:00", off:0, options:[
+    ["Buttermilk (low fat) · 1 glass"],
+    ["Chia seeds with curd · 1 bowl"] ]},
+  { name:"Lunch", time:"2:00", off:0, options:[
+    ["Khichdi · 1 bowl","Curd · 1 bowl"],
+    ["Curd rice · 1 bowl","Boiled carrots · 1 serving","Scrambled egg · 1"],
+    ["Boiled white rice · 1 bowl","Masoor dal with vegetables · 1.5 bowl"],
+    ["Cucumber salad · 1 bowl","Boiled white rice · 1 bowl","Cauliflower chickpea curry · 1 bowl","Buttermilk · 1 glass"],
+    ["Tomato carrot raita · 0.5 bowl","Boiled white rice · 1 bowl","Chicken curry · 1 bowl"],
+    ["Paneer vegetable pulao · 1 bowl","Curd · 1 bowl"],
+    ["Uttapam · 1","Coconut chutney · 1 spoon"] ]},
+  { name:"Evening snack", time:"5:00", off:0, options:[
+    ["Ajwain chaas · 1 glass"],
+    ["Makhana · 0.5 bowl"],
+    ["Moong sprouts dahi chaat · 1 bowl"],
+    ["Sukha bhel · 0.5 bowl","Boiled kala chana · 0.5 serving"] ]},
+  { name:"Dinner", time:"8:00", off:2, options:[
+    ["Boiled white rice · 1 bowl","Vegetable curry · 1 bowl","Grilled chicken · 1"],
+    ["Mixed dal vegetable khichdi · 1 bowl","Kadhi · 1 bowl","Omelette · 1"],
+    ["Rice flour besan chilla · 2","Chana dal chutney · 1 spoon","Buttermilk · 1 glass"],
+    ["Carrot onion salad · 1 bowl","Multigrain chapati · 1","Chicken curry · 1 bowl"],
+    ["Soya peas paneer pulao · 1 bowl","Cucumber raita · 1.5 bowl"],
+    ["Phulka · 2","Mixed dal (moong tuvar masoor) · 1 bowl","Lauki ki sabzi · 0.5 serving"] ]},
+  { name:"Bedtime", time:"after dinner", off:0, options:[
+    ["Haldi milk · 1 glass"] ]},
+  { name:"Protein shake", time:"anytime 12–7", off:0, options:[
+    ["Protein shake · 0.5 serving"] ]},
+];
+
+const store = {
+  get(k){ try { return JSON.parse(localStorage.getItem(k)) } catch(e){ return null } },
+  set(k,v){ try { localStorage.setItem(k, JSON.stringify(v)) } catch(e){} }
+};
+
+const todayIdx = (new Date().getDay() + 6) % 7; // Mon=0
+let day = todayIdx;
+let state = store.get("mealstate") || {}; // {"d-s": {swap:n, done:bool}}
+
+function optIndex(d, s) {
+  const slot = SLOTS[s], sw = (state[d+"-"+s] || {}).swap || 0;
+  return (d + slot.off + sw) % slot.options.length;
+}
+
+function render() {
+  document.getElementById("days").innerHTML = DAYS.map((n,i) =>
+    `<button class="${i===day?'on':''}" onclick="day=${i};render()">${n}${i===todayIdx?' •':''}</button>`).join("");
+  document.getElementById("meals").innerHTML = SLOTS.map((slot,s) => {
+    const st = state[day+"-"+s] || {};
+    const items = slot.options[optIndex(day,s)].map(t => {
+      const [a,b] = t.split(" · ");
+      return `<li>${a}${b ? ` <span>· ${b}</span>` : ""}</li>`;
+    }).join("");
+    const swap = slot.options.length > 1 ? `<button onclick="swap(${s})">Swap</button>` : "";
+    return `<div class="card ${st.done?'done':''}">
+      <div class="head"><span class="slot">${slot.name}</span><span class="time">${slot.time}</span></div>
+      <ul>${items}</ul>
+      <div class="row">${swap}<button class="tick ${st.done?'on':''}" onclick="tick(${s})">${st.done?'Done ✓':'Mark done'}</button></div>
+    </div>`;
+  }).join("");
+}
+
+function swap(s){ const k=day+"-"+s; state[k]=state[k]||{}; state[k].swap=(state[k].swap||0)+1; store.set("mealstate",state); render(); }
+function tick(s){ const k=day+"-"+s; state[k]=state[k]||{}; state[k].done=!state[k].done; store.set("mealstate",state); render(); }
+render();
+</script>
+</body>
+</html>
