@@ -101,8 +101,10 @@ const SLOTS = [
     ["Phulka · 2","Mixed dal (moong tuvar masoor) · 1 bowl","Lauki ki sabzi · 0.5 serving"] ]},
   { name:"Bedtime", time:"after dinner", options:[
     ["Haldi milk · 1 glass"] ]},
-  { name:"Protein shake", time:"anytime 12–7", options:[
-    ["Protein shake · 0.5 serving"] ]},
+  { name:"Boiled eggs", time:"added · anytime", options:[
+    ["Boiled egg · 1"],
+    ["Boiled eggs · 2"],
+    ["Boiled eggs · 3"] ]},
 ];
 
 const store = {
@@ -114,16 +116,16 @@ const todayIdx = (new Date().getDay() + 6) % 7; // Mon=0
 let day = todayIdx;
 let state = store.get("mealstate") || {}; // {"d-s": {swap:n, done:bool}}
 
-// Option picked for each slot, per day (Mon..Sun). Chosen so every day reaches about 90 g protein (estimated).
-// Order: early, breakfast, morning snack, lunch, evening snack, dinner, bedtime, shake
+// Option picked for each slot, per day (Mon..Sun). Chosen so every day reaches about 90 g protein (estimated), with boiled eggs added instead of the protein shake.
+// Order: early, breakfast, morning snack, lunch, evening snack, dinner, bedtime, eggs
 const PLAN = [
-  [0,2,1,1,0,0,0,0],
+  [0,2,1,1,0,0,0,1],
   [0,1,0,4,3,3,0,0],
-  [0,4,1,0,1,0,0,0],
-  [0,5,0,2,0,3,0,0],
-  [0,4,0,4,2,5,0,0],
-  [0,3,0,5,2,3,0,0],
-  [0,0,0,4,2,4,0,0],
+  [0,4,1,0,1,0,0,1],
+  [0,5,0,2,0,3,0,1],
+  [0,4,0,4,2,5,0,1],
+  [0,3,0,5,2,3,0,1],
+  [0,0,0,4,2,4,0,1],
 ];
 
 function optIndex(d, s) {
