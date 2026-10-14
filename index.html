@@ -65,21 +65,21 @@
 const DAYS = ["M","T","W","T","F","S","S"];
 const DAYNAMES = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 
-// Each slot: options come straight from the PDF. off = rotation offset so pairings vary.
+// Each slot: options come straight from the PDF.
 const SLOTS = [
-  { name:"Early morning", time:"9:00", off:0, options:[
+  { name:"Early morning", time:"9:00", options:[
     ["Warm water · 1 glass","Almonds (soaked) · 5","Walnuts · 2"] ]},
-  { name:"Breakfast", time:"10:00", off:0, options:[
+  { name:"Breakfast", time:"10:00", options:[
     ["Apple · 1","Low fat milk (2%) · 1 glass"],
     ["Overnight oats with chia seeds · 1 bowl"],
     ["Idli · 2","Green chutney · 1 spoon","Sambhar · 1 bowl"],
     ["Oats upma · 1 bowl","Moong sprouts · 1 serving"],
     ["Muesli (no sugar) with milk · 1 bowl"],
     ["Moong dal chilla · 2","Curd · 1 bowl"] ]},
-  { name:"Morning snack", time:"12:00", off:0, options:[
+  { name:"Morning snack", time:"12:00", options:[
     ["Buttermilk (low fat) · 1 glass"],
     ["Chia seeds with curd · 1 bowl"] ]},
-  { name:"Lunch", time:"2:00", off:0, options:[
+  { name:"Lunch", time:"2:00", options:[
     ["Khichdi · 1 bowl","Curd · 1 bowl"],
     ["Curd rice · 1 bowl","Boiled carrots · 1 serving","Scrambled egg · 1"],
     ["Boiled white rice · 1 bowl","Masoor dal with vegetables · 1.5 bowl"],
@@ -87,21 +87,21 @@ const SLOTS = [
     ["Tomato carrot raita · 0.5 bowl","Boiled white rice · 1 bowl","Chicken curry · 1 bowl"],
     ["Paneer vegetable pulao · 1 bowl","Curd · 1 bowl"],
     ["Uttapam · 1","Coconut chutney · 1 spoon"] ]},
-  { name:"Evening snack", time:"5:00", off:0, options:[
+  { name:"Evening snack", time:"5:00", options:[
     ["Ajwain chaas · 1 glass"],
     ["Makhana · 0.5 bowl"],
     ["Moong sprouts dahi chaat · 1 bowl"],
     ["Sukha bhel · 0.5 bowl","Boiled kala chana · 0.5 serving"] ]},
-  { name:"Dinner", time:"8:00", off:2, options:[
+  { name:"Dinner", time:"8:00", options:[
     ["Boiled white rice · 1 bowl","Vegetable curry · 1 bowl","Grilled chicken · 1"],
     ["Mixed dal vegetable khichdi · 1 bowl","Kadhi · 1 bowl","Omelette · 1"],
     ["Rice flour besan chilla · 2","Chana dal chutney · 1 spoon","Buttermilk · 1 glass"],
     ["Carrot onion salad · 1 bowl","Multigrain chapati · 1","Chicken curry · 1 bowl"],
     ["Soya peas paneer pulao · 1 bowl","Cucumber raita · 1.5 bowl"],
     ["Phulka · 2","Mixed dal (moong tuvar masoor) · 1 bowl","Lauki ki sabzi · 0.5 serving"] ]},
-  { name:"Bedtime", time:"after dinner", off:0, options:[
+  { name:"Bedtime", time:"after dinner", options:[
     ["Haldi milk · 1 glass"] ]},
-  { name:"Protein shake", time:"anytime 12–7", off:0, options:[
+  { name:"Protein shake", time:"anytime 12–7", options:[
     ["Protein shake · 0.5 serving"] ]},
 ];
 
@@ -114,9 +114,21 @@ const todayIdx = (new Date().getDay() + 6) % 7; // Mon=0
 let day = todayIdx;
 let state = store.get("mealstate") || {}; // {"d-s": {swap:n, done:bool}}
 
+// Option picked for each slot, per day (Mon..Sun). Chosen so every day reaches about 90 g protein (estimated).
+// Order: early, breakfast, morning snack, lunch, evening snack, dinner, bedtime, shake
+const PLAN = [
+  [0,2,1,1,0,0,0,0],
+  [0,1,0,4,3,3,0,0],
+  [0,4,1,0,1,0,0,0],
+  [0,5,0,2,0,3,0,0],
+  [0,4,0,4,2,5,0,0],
+  [0,3,0,5,2,3,0,0],
+  [0,0,0,4,2,4,0,0],
+];
+
 function optIndex(d, s) {
   const slot = SLOTS[s], sw = (state[d+"-"+s] || {}).swap || 0;
-  return (d + slot.off + sw) % slot.options.length;
+  return (PLAN[d][s] + sw) % slot.options.length;
 }
 
 function render() {
