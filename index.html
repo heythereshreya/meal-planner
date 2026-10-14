@@ -31,6 +31,7 @@
   .time { background:rgba(255,255,255,.7); border-radius:99px; padding:4px 11px; font-size:12.5px; font-weight:600; }
   ul { list-style:none; margin:14px 0 12px; padding:0; display:grid; gap:6px; }
   li { background:rgba(255,255,255,.62); border-radius:16px; padding:11px 14px; display:flex; justify-content:space-between; gap:10px; font-weight:500; }
+  li.add { background:rgba(255,255,255,.35); border:1.5px dashed rgba(0,0,0,.25); }
   li span { color:#4d4a44; white-space:nowrap; font-size:14px; }
   .row { display:flex; gap:8px; }
   .row button { flex:1; padding:13px; border-radius:99px; border:0; font:600 15px/1 inherit; font-family:inherit; background:rgba(255,255,255,.75); color:#171717; }
@@ -101,10 +102,6 @@ const SLOTS = [
     ["Phulka · 2","Mixed dal (moong tuvar masoor) · 1 bowl","Lauki ki sabzi · 0.5 serving"] ]},
   { name:"Bedtime", time:"after dinner", options:[
     ["Haldi milk · 1 glass"] ]},
-  { name:"Boiled eggs", time:"added · anytime", options:[
-    ["Boiled egg · 1"],
-    ["Boiled eggs · 2"],
-    ["Boiled eggs · 3"] ]},
 ];
 
 const store = {
@@ -116,16 +113,27 @@ const todayIdx = (new Date().getDay() + 6) % 7; // Mon=0
 let day = todayIdx;
 let state = store.get("mealstate") || {}; // {"d-s": {swap:n, done:bool}}
 
-// Option picked for each slot, per day (Mon..Sun). Chosen so every day reaches about 90 g protein (estimated), with boiled eggs added instead of the protein shake.
-// Order: early, breakfast, morning snack, lunch, evening snack, dinner, bedtime, eggs
+// Option picked for each slot, per day (Mon..Sun). Chosen so every day reaches about 90 g protein (estimated), plus boiled eggs added below (no protein powder).
+// Order: early, breakfast, morning snack, lunch, evening snack, dinner, bedtime
 const PLAN = [
-  [0,2,1,1,0,0,0,1],
-  [0,1,0,4,3,3,0,0],
-  [0,4,1,0,1,0,0,1],
-  [0,5,0,2,0,3,0,1],
-  [0,4,0,4,2,5,0,1],
-  [0,3,0,5,2,3,0,1],
-  [0,0,0,4,2,4,0,1],
+  [0,2,1,1,0,0,0],
+  [0,1,0,4,3,3,0],
+  [0,4,1,0,1,0,0],
+  [0,5,0,2,0,3,0],
+  [0,4,0,4,2,5,0],
+  [0,3,0,5,2,3,0],
+  [0,0,0,4,2,4,0],
+];
+
+// Boiled eggs added to existing meals (not in the PDF) so each day reaches ~90 g protein. Slot 1 = breakfast, 2 = morning snack.
+const EXTRAS = [
+  {1:"Boiled egg · 1", 2:"Boiled egg · 1"},
+  {1:"Boiled egg · 1"},
+  {1:"Boiled egg · 1", 2:"Boiled egg · 1"},
+  {1:"Boiled egg · 1", 2:"Boiled egg · 1"},
+  {1:"Boiled egg · 1", 2:"Boiled egg · 1"},
+  {1:"Boiled egg · 1", 2:"Boiled egg · 1"},
+  {1:"Boiled egg · 1", 2:"Boiled egg · 1"},
 ];
 
 function optIndex(d, s) {
@@ -144,7 +152,7 @@ function render() {
     const items = slot.options[optIndex(day,s)].map(t => {
       const [a,b] = t.split(" · ");
       return `<li>${a}${b ? `<span>${b}</span>` : ""}</li>`;
-    }).join("");
+    }).join("") + (EXTRAS[day][s] ? `<li class="add">${EXTRAS[day][s].split(" · ")[0]}<span>${EXTRAS[day][s].split(" · ")[1]} · added</span></li>` : "");
     const swap = slot.options.length > 1 ? `<button onclick="swap(${s})">Swap</button>` : "";
     return `<div class="card c${s} ${st.done?'done':''}">
       <div class="head"><span class="slot">${slot.name}</span><span class="time">${slot.time}</span></div>
