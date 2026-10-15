@@ -130,7 +130,7 @@ const slotClass = s => "c-" + s.toLowerCase().split(" ")[0];
 const fmt = n => n.toLocaleString("en-IN");
 const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
 
-const COOKED = {chicken:0.75, rice:3};   // cooked weight = raw weight x factor (boneless chicken loses ~25%; drained rice ~3x)
+const COOKED = {chicken:0.72, rice:3};   // cooked weight = raw weight x factor (boneless chicken keeps ~70–75%; drained rice ~3x)
 function amount(it, mult, partName){
   const g = it.g*mult;
   if (it.egg) { const n = g/50; return n + (n===1?" egg":" eggs"); }
@@ -224,7 +224,7 @@ function renderWeek(){
 function renderLight(){
   const L = DATA.light;
   document.getElementById("hdr").innerHTML = `<h1>Light day<br><em>for nausea days.</em></h1>
-    <div class="sub">Soft, mild, small. Sip fluids all day. Everything here comes from your PDF's injection-day foods.</div>`;
+    <div class="sub">Soft, mild, small. Sip fluids all day. Built from your PDF's injection-day foods, with an egg added for protein.</div>`;
   let html = `<div class="cook"><h3>A light day</h3><div class="when">About ${fmt(L.kcal)} kcal · ${L.protein} g protein</div>` +
     L.day.map(r=>r.dish
       ? `<button class="item" onclick="openRecipe('${r.dish}',1)"><span>${r.time} · ${DATA.dishes[r.dish].name}<small>${r.slot}</small></span><span>›</span></button>`
@@ -297,7 +297,7 @@ function renderRecipe(){
     if (ch && rc) { lines.push(`${p.name}: one equal share (about ${r5(ch.g*COOKED.chicken)} g cooked chicken and ${r5(rc.g*COOKED.rice)} g cooked rice in each)`); tips.push(`cooked chicken ≈ ${r5(ch.g*n*COOKED.chicken)} g in total`); }
     else if (ch) { lines.push(`${p.name}: ${r5(ch.g*COOKED.chicken)} g cooked chicken${p.items.some(i=>["veg","onion","tomato"].includes(i.k))?" with its veg and gravy":""}`); tips.push(`cooked chicken ≈ ${r5(ch.g*n*COOKED.chicken)} g in total`); }
     else if (rc && /^Rice/.test(p.name)) {
-      const cg = r5(rc.g*COOKED.rice), cups = Math.max(0.25, Math.round(cg/190*4)/4), cupTxt = {0.25:"¼",0.5:"½",0.75:"¾",1:"1",1.25:"1¼",1.5:"1½"}[cups] || cups;
+      const cg = r5(rc.g*COOKED.rice), cups = Math.max(0.25, Math.round(cg/158*4)/4), cupTxt = {0.25:"¼",0.5:"½",0.75:"¾",1:"1",1.25:"1¼",1.5:"1½"}[cups] || cups;
       lines.push(`Rice: ${cg} g cooked (about ${cupTxt} cup)`); tips.push(`cooked rice ≈ ${r5(rc.g*n*COOKED.rice)} g in total`); hasRice = true; }
     else if (rc) { lines.push(`${p.name}: one equal share (each share has ${rc.g} g raw rice)`); }
     else lines.push(n>1 ? `${p.name}: one equal share` : p.name);
