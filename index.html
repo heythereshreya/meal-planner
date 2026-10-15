@@ -270,7 +270,7 @@ function scaleText(s, n){
 
 let RC = {id:null, n:1, def:1};
 function openRecipe(id, portions){
-  RC = {id, n: portions || BATCH[id] || 1, def: portions || BATCH[id] || 1};
+  RC = {id, n: 1, def: portions || BATCH[id] || 1};   // always opens at 1 portion; use the stepper for more
   renderRecipe();
   document.getElementById("sheet").classList.add("open"); document.body.style.overflow = "hidden";
   document.getElementById("panel").scrollTop = 0;
