@@ -290,20 +290,24 @@ function renderRecipe(){
   });
   // serving: how to split what was cooked
   const r5 = v => Math.round(v/5)*5;
-  const lines = [], tips = [];
+  const lines = [], tips = []; let hasRice = false;
   d.parts.forEach(p=>{
     const ch = p.items.find(i=>i.k==="chicken"), rc = p.items.find(i=>i.k==="rice");
     if (p.fresh) { lines.push(`${p.name}: add fresh (${p.items.map(i=>amount(i,1,p.name).replace(/<[^>]+>/g," ")).join(", ")})`); return; }
     if (ch && rc) { lines.push(`${p.name}: one equal share (about ${r5(ch.g*COOKED.chicken)} g cooked chicken and ${r5(rc.g*COOKED.rice)} g cooked rice in each)`); tips.push(`cooked chicken ≈ ${r5(ch.g*n*COOKED.chicken)} g in total`); }
     else if (ch) { lines.push(`${p.name}: ${r5(ch.g*COOKED.chicken)} g cooked chicken${p.items.some(i=>["veg","onion","tomato"].includes(i.k))?" with its veg and gravy":""}`); tips.push(`cooked chicken ≈ ${r5(ch.g*n*COOKED.chicken)} g in total`); }
-    else if (rc && /^Rice/.test(p.name)) { lines.push(`Rice: about ${r5(rc.g*COOKED.rice)} g cooked`); tips.push(`cooked rice ≈ ${r5(rc.g*n*COOKED.rice)} g in total`); }
+    else if (rc && /^Rice/.test(p.name)) {
+      const cg = r5(rc.g*COOKED.rice), cups = Math.max(0.25, Math.round(cg/190*4)/4), cupTxt = {0.25:"¼",0.5:"½",0.75:"¾",1:"1",1.25:"1¼",1.5:"1½"}[cups] || cups;
+      lines.push(`Rice: ${cg} g cooked (about ${cupTxt} cup)`); tips.push(`cooked rice ≈ ${r5(rc.g*n*COOKED.rice)} g in total`); hasRice = true; }
+    else if (rc) { lines.push(`${p.name}: one equal share (each share has ${rc.g} g raw rice)`); }
     else lines.push(n>1 ? `${p.name}: one equal share` : p.name);
   });
   const needServe = n>1 || d.parts.some(p=>p.items.some(i=>i.k==="chicken"||i.k==="rice"));
   if (needServe) html += `<div class="part"><h4>${n===1?"Serve it":"Serve it: divide into "+n+" equal boxes"}</h4>` +
     `<p class="plain" style="margin:0 0 6px">${n===1?"On one plate or in one box:":"Each box or plate gets:"}</p>` +
     `<ul style="margin:0;padding-left:20px;font-size:15px;line-height:1.5">${lines.map(x=>`<li>${x}</li>`).join("")}</ul>` +
-    (n>1&&tips.length?`<p class="plain" style="margin:10px 0 0"><b>To split evenly, weigh it:</b> ${[...new Set(tips)].join("; ")}. Divide by ${n}.</p>`:"") + `</div>`;
+    (n>1&&tips.length?`<p class="plain" style="margin:10px 0 0"><b>To split evenly, weigh it:</b> ${[...new Set(tips)].join("; ")}. Divide by ${n}.</p>`:"") +
+    (hasRice?`<p class="plain" style="margin:10px 0 0"><b>Rice:</b> weigh the cooked rice, or level it into a measuring cup. Pack it on one side of the box, away from any curry or gravy, so it doesn't go soggy. To reheat, cover it, add 1 tbsp of water, and heat once until steaming hot.</p>`:"") + `</div>`;
   if (n>1) html += `<div class="safe">Cool fast, box in portions, refrigerate. Eat within 2 days; reheat once until steaming hot.</div>`;
   document.getElementById("panel").innerHTML = html;
 }
